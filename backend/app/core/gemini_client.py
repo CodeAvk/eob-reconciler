@@ -41,7 +41,8 @@ def load_api_key(env_path: Path = ROOT / ".env") -> str:
     raise RuntimeError("No Gemini API key found. Set GEMINI_API_KEY or fill .env")
 
 
-def _bump_usage(daily_cap: int, path: Path = USAGE_FILE) -> int:
+def _bump_usage(daily_cap: int, path: Path = None) -> int:
+    path = path or USAGE_FILE
     today = date.today().isoformat()
     usage = {}
     if path.exists():
