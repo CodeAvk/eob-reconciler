@@ -23,7 +23,7 @@ Intel i5-1334U, ~31.7 GB RAM, no NVIDIA GPU. Assume CPU-only inference (llama.cp
 - Never push to company repos. Never copy company code, secrets, data or proprietary material here.
 - Run tests and security checks (secret scan, dependency audit) before every push.
 - No fake commits, filler code, or scheduled changes to inflate the contribution graph. Commit only real work.
-- Current state: local repo only, no remote, no commits. GitHub repo creation and push are not authorized yet.
+- Current state: local commits only, no remote. GitHub repo creation and push are not done yet; the owner wants one commit per real feature, pushed once a personal repo exists.
 
 ## Data rules
 - No real personal, health or financial data in the repo or in tests. Use synthetic documents only.
