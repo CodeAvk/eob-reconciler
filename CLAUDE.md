@@ -28,3 +28,10 @@ Intel i5-1334U, ~31.7 GB RAM, no NVIDIA GPU. Assume CPU-only inference (llama.cp
 ## Data rules
 - No real personal, health or financial data in the repo or in tests. Use synthetic documents only.
 - Respect dataset and code licences (e.g. CC BY-NC-SA data is not usable in a product; AMA owns CPT code descriptions).
+
+## Workflow and pacing (owner, 2026-10-29)
+- Goal: one valuable, finished AI project, with a GitHub history that reads as steady, consistent, real work.
+- One feature per commit, pushed only when that feature is finished, tested and verified. Do not push several features in one session just to catch up.
+- Take time on each step; quality over speed. New projects are started one at a time, after the current one meets its gates.
+- Never backdate commits, fake timestamps, or create filler commits to shape the contribution graph. History must match the real work.
+- Push method: token in the git-ignored `.env` as `GITHUB_TOKEN`, passed per command via `http.extraheader`; never printed or stored. Token expires about 2026-11-28, so remind the owner before then.
