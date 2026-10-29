@@ -1,6 +1,6 @@
 import json
 import pytest
-from billrecon import gemini_client as gc
+from app.core import gemini_client as gc
 
 
 def test_load_key_bare_and_named(tmp_path, monkeypatch):

@@ -1,5 +1,5 @@
 from decimal import Decimal as D
-from billrecon.checks import Bill, Eob, Line, run_checks
+from app.core.checks import Bill, Eob, Line, run_checks
 
 
 def L(code, amt, date="2026-01-05", src=""):

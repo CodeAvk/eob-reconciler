@@ -7,3 +7,5 @@ __pycache__/
 data/generated/
 .pytest_cache/
 data/usage.json
+node_modules/
+.next/
