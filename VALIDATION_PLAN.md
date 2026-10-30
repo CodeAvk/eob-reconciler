@@ -3,17 +3,18 @@
 Rule: **No product implementation until Gates 0–2 pass.** Results must be recorded as they actually happened. Never invent interviews, quotes, or numbers. If a gate fails, record it and reject or pivot the idea.
 
 ## Gate 0 — Free API access and terms (≈1 day, free)
-- [ ] Create a free Gemini API key (personal account); store in git-ignored `.env`.
-- [ ] Record live free-tier limits from AI Studio (RPM/RPD/TPM) and re-read the data terms; note date.
-- [ ] Confirm a vision/PDF extraction call works on a synthetic page within quota; record latency and quota used per document.
+- [x] Create a free Gemini API key (personal account); store in git-ignored `.env`. (done 2026-10-29)
+- [x] Record live free-tier limits and re-read the data terms. Measured 2026-10-30: gemini-2.5-flash allows 20 requests per day on the free tier (from the API's 429 message). Data terms unchanged: not for sensitive data.
+- [x] Confirm a vision extraction call works on synthetic pages. Latency about 14 s per case plus pauses; now 1 request per case.
 - [ ] Decide the privacy approach for real data (redact-then-send / user's own key / change domain). Test redaction recall if chosen.
-- [ ] Pass: ≥ 30 documents processable per day within free limits, and a privacy approach is chosen. Fail → hard-code or change idea.
+- [ ] Pass: ≥ 30 documents processable per day within free limits, and a privacy approach is chosen. **Status 2026-10-30: NOT MET.** The free limit allows about 20 cases per day (1 request each), and the privacy approach for real data is still undecided. Fine for evaluation, a hard ceiling for real users.
 - [ ] Local models are no longer part of the plan unless the owner reverses this.
 
 ## Gate 1 — Does AI beat the simple solution? (≈1 week)
-- [ ] Build a **synthetic** test set: ≥ 30 bill + EOB pairs with varied layouts/scan quality, generated with known ground truth. No real PHI.
-- [ ] Baseline A (non-AI): OCR + regex/templates (free libs). Baseline B: free-API extraction (Gemini vision/JSON schema output).
-- [ ] Metrics: field-level F1, fabricated-value rate, seconds per doc.
+- [x] Build a **synthetic** test set: ≥ 30 bill + EOB pairs with varied layouts/scan quality, generated with known ground truth. No real PHI. (32 easy + 32 hard, 2026-10-30)
+- [x] Baseline A (non-AI): OCR + regex (RapidOCR). Done, scored on all 64 cases.
+- [ ] Baseline B: free-API extraction (Gemini). Easy set: 8 of 32 cases. Hard set: 0 of 32, blocked by the 20 requests/day quota. See `docs/GATE1_RESULTS.md`.
+- [x] Metrics: line precision/recall/F1, fabricated lines, field accuracy, flag accuracy, false alarms, seconds per case.
 - [ ] Pass: B ≥ 0.90 F1, ≥ 10 points over A, 0 fabricated line items. **Fail → reject the idea** (AI adds no meaningful value). Fall back to idea 3 bake-off, or stop.
 
 ## Gate 2 — Is the problem real and does the AI part matter to users? (≈2–3 weeks)
@@ -40,3 +41,5 @@ Before any GitHub repo creation or push: complete the checklist in `CLAUDE.md` (
 | Date | Gate | Result | Notes |
 |------|------|--------|-------|
 | 2026-10-28 | research | done | Desk research only. No validation performed yet. |
+| 2026-10-29 | Gate 0 | partial | Key works. Privacy approach for real data undecided. |
+| 2026-10-30 | Gate 1 | pending | Baseline scores 1.00 on easy set but 0.54 line recall on hard set (32 cases). Gemini perfect on 8 easy cases, not yet measured on hard set (free quota 20/day). See docs/GATE1_RESULTS.md. |

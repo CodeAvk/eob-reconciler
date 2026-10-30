@@ -13,7 +13,7 @@ Personal product-development workspace. Owner's personal GitHub account: `CodeAv
 - Do not implement a product until the gates in `VALIDATION_PLAN.md` are met.
 
 ## Dev hardware (measured 2026-10-28)
-Intel i5-1334U, ~31.7 GB RAM, no NVIDIA GPU. Assume CPU-only inference (llama.cpp / Ollama). Not yet benchmarked.
+Intel i5-1334U, ~31.7 GB RAM, no NVIDIA GPU. No local LLMs are used (owner decision); only the non-AI OCR baseline runs on CPU, about 18 s per case.
 
 ## Git and GitHub safety (personal vs employer)
 - The global git identity on this machine is a **work** identity. Never commit or push with it.
