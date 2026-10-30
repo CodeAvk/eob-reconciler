@@ -44,12 +44,12 @@ def test_pipeline_flags_and_failure_path():
     cid = upload(client).json()["id"]
     bill = Bill([Line("2026-01-01", "A", D("100.00"), "row1"),
                  Line("2026-01-01", "A", D("100.00"), "row2")], D("200.00"), D("90.00"))
-    process_case(cid, repo, storage, lambda *a: bill, lambda *a: Eob([], D("40.00")))
+    process_case(cid, repo, storage, lambda *a: (bill, Eob([], D("40.00"))))
     case = repo.get(cid)
     assert case["status"] == "done"
     assert {f["kind"] for f in case["flags"]} == {"duplicate_line", "eob_mismatch"}
 
     def boom(*a):
         raise RuntimeError("quota")
-    process_case(cid, repo, storage, boom, boom)
+    process_case(cid, repo, storage, boom)
     assert repo.get(cid)["status"] == "failed" and "quota" in repo.get(cid)["error"]

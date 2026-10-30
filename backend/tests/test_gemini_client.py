@@ -40,3 +40,23 @@ def test_generate_parses_json(tmp_path, monkeypatch):
     out = gc.generate("x", schema={"type": "OBJECT"}, opener=lambda *a, **k: Resp(),
                       daily_cap=5)
     assert out == {"a": 1}
+
+
+def test_error_detail_is_included_and_short(tmp_path, monkeypatch):
+    import io
+    import urllib.error
+    monkeypatch.setattr(gc, "USAGE_FILE", tmp_path / "u.json")
+    monkeypatch.setattr(gc, "load_api_key", lambda *a, **k: "k")
+    body = json.dumps({"error": {"message": "Quota exceeded for metric: requests per day"}}).encode()
+
+    def opener(*a, **k):
+        raise urllib.error.HTTPError("u", 429, "x", {}, io.BytesIO(body))
+
+    with pytest.raises(RuntimeError, match="429: Quota exceeded for metric"):
+        gc.generate("x", opener=opener, retries=0, daily_cap=5)
+
+
+def test_payload_supports_multiple_images():
+    p = gc.build_payload("hi", images=[(b"a", "image/png"), (b"b", "image/jpeg")])
+    parts = p["contents"][0]["parts"]
+    assert len(parts) == 3 and parts[2]["inline_data"]["mime_type"] == "image/jpeg"

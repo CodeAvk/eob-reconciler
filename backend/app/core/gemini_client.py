@@ -16,6 +16,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[3]
 ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 DEFAULT_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
+# Free tier for gemini-2.5-flash allowed 20 requests/day when measured on 2026-10-30.
+DEFAULT_DAILY_CAP = int(os.environ.get("GEMINI_DAILY_CAP", "20"))
 USAGE_FILE = ROOT / "data" / "usage.json"
 
 
@@ -57,11 +59,24 @@ def _bump_usage(daily_cap: int, path: Path = None) -> int:
     return usage["requests"]
 
 
-def build_payload(prompt, image_bytes=None, mime_type="image/png", schema=None):
+def _error_detail(err) -> str:
+    """Short, key-free message from a Gemini error response body."""
+    try:
+        msg = json.loads(err.read()).get("error", {}).get("message", "")
+    except Exception:
+        return "no detail"
+    return " ".join(msg.split())[:700]
+
+
+def build_payload(prompt, image_bytes=None, mime_type="image/png", schema=None, images=None):
+    """`images` is a list of (bytes, mime) pairs; `image_bytes` is the single-image shortcut."""
     parts = [{"text": prompt}]
+    pairs = list(images or [])
     if image_bytes is not None:
-        parts.append({"inline_data": {"mime_type": mime_type,
-                                      "data": base64.b64encode(image_bytes).decode()}})
+        pairs.insert(0, (image_bytes, mime_type))
+    for data, mime in pairs:
+        parts.append({"inline_data": {"mime_type": mime,
+                                      "data": base64.b64encode(data).decode()}})
     payload = {"contents": [{"parts": parts}],
                "generationConfig": {"temperature": 0}}
     if schema is not None:
@@ -71,11 +86,12 @@ def build_payload(prompt, image_bytes=None, mime_type="image/png", schema=None):
 
 
 def generate(prompt, image_bytes=None, mime_type="image/png", schema=None,
-             model=DEFAULT_MODEL, daily_cap=50, retries=2, opener=urllib.request.urlopen):
+             model=DEFAULT_MODEL, daily_cap=None, retries=2, opener=urllib.request.urlopen,
+             images=None):
     """Call Gemini once (with retry on 429/5xx). Returns parsed JSON if a schema
     is given, otherwise the response text."""
-    _bump_usage(daily_cap)
-    body = json.dumps(build_payload(prompt, image_bytes, mime_type, schema)).encode()
+    _bump_usage(daily_cap if daily_cap is not None else DEFAULT_DAILY_CAP)
+    body = json.dumps(build_payload(prompt, image_bytes, mime_type, schema, images)).encode()
     req = urllib.request.Request(
         ENDPOINT.format(model=model), data=body, method="POST",
         headers={"Content-Type": "application/json", "x-goog-api-key": load_api_key()})
@@ -88,6 +104,6 @@ def generate(prompt, image_bytes=None, mime_type="image/png", schema=None,
             if err.code in (429, 500, 503) and attempt < retries:
                 time.sleep(2 ** (attempt + 2))
                 continue
-            raise RuntimeError(f"Gemini HTTP {err.code}") from None
+            raise RuntimeError(f"Gemini HTTP {err.code}: {_error_detail(err)}") from None
     text = data["candidates"][0]["content"]["parts"][0]["text"]
     return json.loads(text) if schema is not None else text

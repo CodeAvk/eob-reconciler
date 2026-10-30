@@ -52,3 +52,23 @@ def extract_eob(image: bytes, mime: str, generate=gemini_client.generate) -> Eob
                     "explanation of benefits. " + _RULES,
                     image_bytes=image, mime_type=mime, schema=EOB_SCHEMA)
     return Eob([], _money(data["patient_responsibility"]))
+
+
+CASE_SCHEMA = {"type": "OBJECT", "properties": {"bill": BILL_SCHEMA, "eob": EOB_SCHEMA},
+               "required": ["bill", "eob"]}
+
+
+def extract_case(bill_image: bytes, bill_mime: str, eob_image: bytes, eob_mime: str,
+                 generate=gemini_client.generate):
+    """Extract bill and EOB in ONE request (the free tier allows few requests per day)."""
+    data = generate(
+        "Two images follow. Image 1 is an itemized provider bill: extract only charge lines "
+        "(service date, code, charge), excluding payments, adjustments, discounts and balances, "
+        "plus the stated total and the amount the patient is asked to pay. Image 2 is an "
+        "explanation of benefits: extract the patient responsibility amount. " + _RULES,
+        images=[(bill_image, bill_mime), (eob_image, eob_mime)], schema=CASE_SCHEMA)
+    b = data["bill"]
+    lines = [Line(l["date"], l["code"].strip(), _money(l["amount"]), l["source"])
+             for l in b["lines"]]
+    bill = Bill(lines, _money(b["stated_total"]), _money(b["patient_owes"]))
+    return bill, Eob([], _money(data["eob"]["patient_responsibility"]))

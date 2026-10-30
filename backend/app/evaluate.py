@@ -96,11 +96,9 @@ def make_extractor(name: str, throttle: float = 0.0):
         from app import extraction
 
         def run(bill_png, eob_png):
-            bill = extraction.extract_bill(bill_png, "image/png")
+            result = extraction.extract_case(bill_png, "image/png", eob_png, "image/png")
             time.sleep(throttle)
-            eob = extraction.extract_eob(eob_png, "image/png")
-            time.sleep(throttle)
-            return bill, eob
+            return result
         return run
     raise SystemExit(f"unknown extractor {name}")
 

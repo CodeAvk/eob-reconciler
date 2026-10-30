@@ -10,13 +10,12 @@ def _line(l):
     return {"date": l.date, "code": l.code, "amount": str(l.billed), "source": l.source}
 
 
-def process_case(case_id, repo, storage, extract_bill=extraction.extract_bill,
-                 extract_eob=extraction.extract_eob):
+def process_case(case_id, repo, storage, extract=extraction.extract_case):
     case = repo.get(case_id)
     repo.update(case_id, {"status": "processing", "updated_at": now()})
     try:
-        bill = extract_bill(storage.get(case["bill_key"]), case["bill_mime"])
-        eob = extract_eob(storage.get(case["eob_key"]), case["eob_mime"])
+        bill, eob = extract(storage.get(case["bill_key"]), case["bill_mime"],
+                            storage.get(case["eob_key"]), case["eob_mime"])
         flags = [asdict(f) for f in run_checks(bill, eob)]
         repo.update(case_id, {
             "status": "done", "updated_at": now(), "error": None, "flags": flags,
