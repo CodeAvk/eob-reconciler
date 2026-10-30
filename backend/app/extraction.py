@@ -39,7 +39,8 @@ def _money(value: str) -> Decimal:
 
 
 def extract_bill(image: bytes, mime: str, generate=gemini_client.generate) -> Bill:
-    data = generate("Extract the itemized provider bill. " + _RULES,
+    data = generate("Extract the itemized provider bill. Include only charge lines (service date, "
+                    "code, charge). Exclude payments, adjustments, discounts and balances. " + _RULES,
                     image_bytes=image, mime_type=mime, schema=BILL_SCHEMA)
     lines = [Line(l["date"], l["code"].strip(), _money(l["amount"]), l["source"])
              for l in data["lines"]]

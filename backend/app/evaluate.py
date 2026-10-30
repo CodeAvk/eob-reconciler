@@ -106,7 +106,7 @@ def make_extractor(name: str, throttle: float = 0.0):
 
 
 def evaluate(extractor, name: str, data_dir: Path, limit=None, cache_root=None):
-    cache_dir = Path(cache_root or ROOT / "data" / "eval") / name
+    cache_dir = Path(cache_root or ROOT / "data" / "eval") / f"{name}_{Path(data_dir).name}"
     cache_dir.mkdir(parents=True, exist_ok=True)
     results = []
     for stem, bill_p, eob_p, truth in load_cases(data_dir, limit):
@@ -139,7 +139,7 @@ def main():
     results = evaluate(make_extractor(a.extractor, a.throttle), a.extractor,
                        Path(a.data_dir), a.limit)
     report = {"extractor": a.extractor, "summary": aggregate(results), "cases": results}
-    out = ROOT / "data" / "eval" / f"{a.extractor}_report.json"
+    out = ROOT / "data" / "eval" / f"{a.extractor}_{Path(a.data_dir).name}_report.json"
     out.write_text(json.dumps(report, indent=2))
     print(json.dumps(report["summary"], indent=2))
     for r in results:

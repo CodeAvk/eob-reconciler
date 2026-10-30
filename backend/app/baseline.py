@@ -2,8 +2,9 @@
 
 Used by the Gate 1 evaluation as the "simple solution" Gemini must beat.
 Layout-agnostic: it groups OCR boxes into rows and finds date, code and amount
-anywhere in a row. It knows the synthetic code format (SYN-dddd), which is an
-advantage for the baseline; real codes vary more.
+anywhere in a row. Generic patterns cover ISO, US and long dates and three code
+shapes (SYN-dddd, letter+4 digits, 5 digits). One bounded round of tuning was
+done after the easy-set run; it was not tuned against individual failures.
 """
 import io
 import re
@@ -11,8 +12,8 @@ from decimal import Decimal
 
 from app.core.checks import Bill, Eob, Line
 
-DATE = re.compile(r"\d{4}-\d{2}-\d{2}")
-CODE = re.compile(r"SYN-\d{4}")
+DATE = re.compile(r"\d{4}-\d{2}-\d{2}|\d{1,2}/\d{1,2}/\d{4}|[A-Z][a-z]{2} \d{1,2}, \d{4}")
+CODE = re.compile(r"\bSYN-\d{4}\b|\b[A-Z]\d{4}\b|\b\d{5}\b")
 AMOUNT = re.compile(r"\$?\s?(\d[\d,]*\.\d{2})")
 TOTAL = re.compile(r"total\s+charges", re.I)
 OWES = re.compile(r"amount\s+you\s+owe", re.I)
@@ -29,7 +30,7 @@ def _ocr_engine():
     return _engine
 
 
-def ocr_rows(image_bytes: bytes, tolerance: int = 14):
+def ocr_rows(image_bytes: bytes, tolerance: int = 22):
     """OCR an image and return text rows (boxes grouped by vertical position)."""
     import numpy as np
     from PIL import Image

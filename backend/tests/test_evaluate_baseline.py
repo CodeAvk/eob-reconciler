@@ -63,3 +63,14 @@ def test_evaluate_uses_cache_and_survives_errors(tmp_path):
     assert "error" not in first[0] and "error" in first[1]
     evaluate(fake, "fake", tmp_path / "data", cache_root=cache)
     assert len(calls) == 3  # case 0 came from cache, only the failed case retried
+
+
+def test_parse_bill_rows_other_formats_and_distractors():
+    rows = ["Aug 15, 2026  B4025  Physical therapy  $2,703.87",
+            "03/04/2026  49767  Follow-up  $763.41",
+            "May 16, 2026  Payment received  -$227.07",
+            "Total charges: $3,467.28", "Amount you owe: $100.00"]
+    bill = parse_bill_rows(rows)
+    assert [(l.code, l.billed) for l in bill.lines] == [("B4025", D("2703.87")),
+                                                         ("49767", D("763.41"))]
+    assert bill.stated_total == D("3467.28")
