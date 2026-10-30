@@ -11,3 +11,7 @@ node_modules/
 .next/
 *.tsbuildinfo
 next-env.d.ts
+.txt
+*.txt
+!backend/requirements.txt
+data/eval/
