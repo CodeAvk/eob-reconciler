@@ -30,26 +30,47 @@ def _ocr_engine():
     return _engine
 
 
-def ocr_rows(image_bytes: bytes, tolerance: int = 22):
-    """OCR an image and return text rows (boxes grouped by vertical position)."""
+def tilt_degrees(boxes) -> float:
+    """Median angle of OCR box top edges, in degrees (page tilt)."""
+    import math
+    import statistics
+    angles = [math.degrees(math.atan2(b[1][1] - b[0][1], b[1][0] - b[0][0])) for b in boxes]
+    return statistics.median(angles) if angles else 0.0
+
+
+def group_rows(items, tolerance: int):
+    """items: (y, x, text). Group into rows by vertical position, then sort by x."""
+    rows, current, anchor = [], [], None
+    for y, x, text in sorted(items):
+        if anchor is not None and abs(y - anchor) > tolerance:
+            rows.append(current)
+            current, anchor = [], None
+        current.append((x, text))
+        anchor = y if anchor is None else anchor
+    if current:
+        rows.append(current)
+    return ["  ".join(t for _, t in sorted(r)) for r in rows]
+
+
+def ocr_rows(image_bytes: bytes, tolerance: int = 22, deskew: bool = False):
+    """OCR an image and return text rows. With deskew, box centres are rotated
+    back by the measured page tilt before rows are grouped."""
+    import math
+
     import numpy as np
     from PIL import Image
     arr = np.array(Image.open(io.BytesIO(image_bytes)).convert("RGB"))
     out = _ocr_engine()(arr)
     if out.boxes is None:
         return []
-    items = sorted(((float(b[:, 1].mean()), float(b[:, 0].min()), t)
-                    for b, t in zip(out.boxes, out.txts)))
-    rows, current, last_y = [], [], None
-    for y, x, text in items:
-        if last_y is not None and abs(y - last_y) > tolerance:
-            rows.append(current)
-            current = []
-        current.append((x, text))
-        last_y = y if not current[:-1] else last_y
-    if current:
-        rows.append(current)
-    return ["  ".join(t for _, t in sorted(r)) for r in rows]
+    theta = math.radians(tilt_degrees(out.boxes)) if deskew else 0.0
+    cos, sin = math.cos(-theta), math.sin(-theta)
+    items = []
+    for box, text in zip(out.boxes, out.txts):
+        cx, cy = float(box[:, 0].mean()), float(box[:, 1].mean())
+        x, y = cx * cos - cy * sin, cx * sin + cy * cos
+        items.append((y, x, text))
+    return group_rows(items, 14 if deskew else tolerance)
 
 
 def _amount(text):
@@ -82,5 +103,11 @@ def parse_eob_rows(rows) -> Eob:
     return Eob([], resp)
 
 
-def extract(bill_png: bytes, eob_png: bytes):
-    return parse_bill_rows(ocr_rows(bill_png)), parse_eob_rows(ocr_rows(eob_png))
+def extract(bill_png: bytes, eob_png: bytes, deskew: bool = False):
+    return (parse_bill_rows(ocr_rows(bill_png, deskew=deskew)),
+            parse_eob_rows(ocr_rows(eob_png, deskew=deskew)))
+
+
+def extract_deskew(bill_png: bytes, eob_png: bytes):
+    """Stronger baseline: the same OCR + regex, with page-tilt correction."""
+    return extract(bill_png, eob_png, deskew=True)

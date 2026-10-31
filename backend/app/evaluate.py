@@ -92,6 +92,9 @@ def make_extractor(name: str, throttle: float = 0.0):
     if name == "baseline":
         from app import baseline
         return baseline.extract
+    if name == "baseline_deskew":
+        from app import baseline
+        return baseline.extract_deskew
     if name == "gemini":
         from app import extraction
 
@@ -130,7 +133,7 @@ def evaluate(extractor, name: str, data_dir: Path, limit=None, cache_root=None):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("data_dir")
-    ap.add_argument("--extractor", choices=["baseline", "gemini"], required=True)
+    ap.add_argument("--extractor", choices=["baseline", "baseline_deskew", "gemini"], required=True)
     ap.add_argument("--limit", type=int)
     ap.add_argument("--throttle", type=float, default=2.0)
     a = ap.parse_args()

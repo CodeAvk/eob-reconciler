@@ -74,3 +74,19 @@ def test_parse_bill_rows_other_formats_and_distractors():
     assert [(l.code, l.billed) for l in bill.lines] == [("B4025", D("2703.87")),
                                                          ("49767", D("763.41"))]
     assert bill.stated_total == D("3467.28")
+
+
+def test_group_rows_orders_by_x_and_splits_on_y():
+    from app.baseline import group_rows
+    items = [(100.0, 300.0, "B"), (101.0, 50.0, "A"), (160.0, 10.0, "C")]
+    assert group_rows(items, 14) == ["A  B", "C"]
+
+
+def test_tilt_degrees_measures_median_top_edge_angle():
+    import math
+    import numpy as np
+    from app.baseline import tilt_degrees
+    t = math.radians(2.0)
+    box = np.array([[0, 0], [100 * math.cos(t), 100 * math.sin(t)], [100, 20], [0, 20]])
+    assert abs(tilt_degrees([box, box, box]) - 2.0) < 0.01
+    assert tilt_degrees([]) == 0.0
