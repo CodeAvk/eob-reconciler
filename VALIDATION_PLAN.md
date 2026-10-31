@@ -13,26 +13,29 @@ Rule: **No product implementation until Gates 0–2 pass.** Results must be reco
 ## Gate 1 — Does AI beat the simple solution? (≈1 week)
 - [x] Build a **synthetic** test set: ≥ 30 bill + EOB pairs with varied layouts/scan quality, generated with known ground truth. No real PHI. (32 easy + 32 hard, 2026-10-30)
 - [x] Baseline A (non-AI): OCR + regex (RapidOCR). Done, scored on all 64 cases.
-- [ ] Baseline B: free-API extraction (Gemini). Easy set: 8 of 32 cases. Hard set: 0 of 32, blocked by the 20 requests/day quota. See `docs/GATE1_RESULTS.md`.
+- [x] Baseline B: free-API extraction (Gemini). Easy set: 8 of 32 cases. Hard set: 18 of 32 (14 left, 20 requests/day quota). See `docs/GATE1_RESULTS.md`.
+- [x] Stronger baseline (deskew) added and compared on the same cases.
 - [x] Metrics: line precision/recall/F1, fabricated lines, field accuracy, flag accuracy, false alarms, seconds per case.
-- [ ] Pass: B ≥ 0.90 F1, ≥ 10 points over A, 0 fabricated line items. **Fail → reject the idea** (AI adds no meaningful value). Fall back to idea 3 bake-off, or stop.
+- [ ] Pass: B ≥ 0.90 F1, ≥ 10 points over A, 0 fabricated line items. **Status 2026-10-31: NOT MET.** F1 0.947 clears 0.90, but the margin over the deskewed baseline is +1.2 points. The owner chose to continue as a portfolio project. **Fail → reject the idea** (AI adds no meaningful value). Fall back to idea 3 bake-off, or stop.
 
 ## Gate 2 — Is the problem real and does the AI part matter to users? (≈2–3 weeks)
-Honest, low-cost methods only:
+**WAIVED by the owner on 2026-10-31.** This is built as a portfolio project to demonstrate AI engineering, not as a validated product. User demand is **not validated**, and no document, README or profile text may claim it is. The steps below stay as an optional path if the project is ever pursued as a product (see `docs/INTERVIEW_SCRIPT.md`). The kill criteria about interviews no longer apply.
+
+Optional, honest, low-cost methods:
 - [ ] Draft a short screener and interview script (problem, not solution). Ask about the last disputed/confusing medical bill, what they did, time/money spent.
 - [ ] Recruit ≥ 8 people with a recent medical-bill experience from my own network and relevant public communities (follow each community's rules; no spam). Record counts of those contacted vs. replied.
 - [ ] Log every interview in `validation/interviews/` with date, anonymized ID, notes. Only real ones.
 - [ ] Concierge test: for ≥ 5 consenting participants, run the tool on their own redacted documents (or a walk-through using synthetic docs) and ask whether the cited findings would change their action. Participants never upload data without consent; delete after.
 - [ ] Pass: ≥ 5 of 8 report a real recent problem; ≥ 3 would use it next time, with a concrete trigger. Willingness-to-pay is noted but not required. Fail → reject or reposition.
 
-## Gate 3 — Narrow MVP build (only after Gates 0–2)
+## Gate 3 — Narrow MVP build (after Gates 0 and 1; Gate 2 waived)
 - [ ] Implement exactly the MVP scope in `PRODUCT_RESEARCH.md`.
 - [ ] Tests: unit tests for deterministic checks; evaluation harness reruns Gate 1 numbers in CI-like script.
 - [ ] Security: secret scan, dependency audit, confirm no network calls at inference, no real data in repo.
 - [ ] Success criteria from `PRODUCT_RESEARCH.md` must be re-measured and reported, whether they pass or not.
 
 ## Kill criteria
-Stop or pivot if any: Gate 1 fails; fewer than 3 of 8 interviewees have a real problem; local latency > 3 min/doc with no workaround; a free tool already does the same with local-only processing and evidence-cited flags (re-check competitors before Gate 3).
+Stop or pivot if any: Gate 1 fails; local latency > 3 min/doc with no workaround; a free tool already does the same with local-only processing and evidence-cited flags (re-check competitors before Gate 3).
 
 ## Publishing gate (separate from product gates)
 Before any GitHub repo creation or push: complete the checklist in `CLAUDE.md` (git author, remote, `gh auth status` = `CodeAvk`), run tests and security checks. Commit only real work. No filler commits.
@@ -42,4 +45,6 @@ Before any GitHub repo creation or push: complete the checklist in `CLAUDE.md` (
 |------|------|--------|-------|
 | 2026-10-28 | research | done | Desk research only. No validation performed yet. |
 | 2026-10-29 | Gate 0 | partial | Key works. Privacy approach for real data undecided. |
+| 2026-10-31 | Gate 1 | not passed (strict rule) | Gemini line F1 0.947 vs 0.935 for a deskewed OCR+regex baseline on the same 18 hard cases (+1.2 pts, rule needs +10). AI edge is in flags exact (100% vs 83%) and false alarms (0/5 vs 2/5), small sample. See docs/GATE1_RESULTS.md. |
+| 2026-10-31 | Gate 2 | waived | Owner chose to build as a portfolio project; demand not validated and must not be claimed. |
 | 2026-10-30 | Gate 1 | pending | Baseline scores 1.00 on easy set but 0.54 line recall on hard set (32 cases). Gemini perfect on 8 easy cases, not yet measured on hard set (free quota 20/day). See docs/GATE1_RESULTS.md. |

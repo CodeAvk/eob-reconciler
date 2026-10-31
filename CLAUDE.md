@@ -10,7 +10,7 @@ Personal product-development workspace. Owner's personal GitHub account: `CodeAv
 - Verify each free tier's current limits and data terms on the provider's own page before building on it; free tiers change often. Keys go in env vars / `.env` (git-ignored), never in the repo. Do not assume paid usage; stay inside free quota.
 - Free-tier terms may allow provider training on submitted data (Gemini: yes outside EEA/UK/CH, and it says not to submit sensitive/personal data). Send only synthetic or non-sensitive data to a free API. Report privacy honestly.
 - Never fabricate interviews, customer feedback, demand, benchmarks or sources. Mark unverified claims as unverified.
-- Do not implement a product until the gates in `VALIDATION_PLAN.md` are met.
+- Gates in `VALIDATION_PLAN.md` apply, except Gate 2 (user interviews), which the owner waived on 2026-10-31. This is a portfolio project: never claim user demand or validation in the README, docs, commits or any profile text. Say "demand not validated".
 
 ## Dev hardware (measured 2026-10-28)
 Intel i5-1334U, ~31.7 GB RAM, no NVIDIA GPU. No local LLMs are used (owner decision); only the non-AI OCR baseline runs on CPU, about 18 s per case.
