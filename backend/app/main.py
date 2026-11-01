@@ -10,7 +10,7 @@ from app.repo import now
 ALLOWED = {"image/png", "image/jpeg", "image/webp", "application/pdf"}
 
 app = FastAPI(title="Bill Reconciler API")
-app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:3000"],
+app.add_middleware(CORSMiddleware, allow_origins=[o.strip() for o in settings.cors_origins.split(",") if o.strip()],
                    allow_methods=["*"], allow_headers=["*"])
 
 

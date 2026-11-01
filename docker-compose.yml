@@ -6,7 +6,7 @@ services:
     volumes: [mongo_data:/data/db]
   redis:
     image: redis:7-alpine
-    ports: ["6379:6379"]
+    ports: ["${REDIS_PORT:-6380}:6379"]  # 6380 on the host: 6379 is often taken by other local Redis containers
   minio:
     image: minio/minio:latest
     command: server /data --console-address ":9001"
