@@ -45,6 +45,7 @@ Before any GitHub repo creation or push: complete the checklist in `CLAUDE.md` (
 |------|------|--------|-------|
 | 2026-10-28 | research | done | Desk research only. No validation performed yet. |
 | 2026-10-29 | Gate 0 | partial | Key works. Privacy approach for real data undecided. |
+| 2026-11-01 | Gate 1 | line-F1 rule not met; flags clearly better | 30 hard cases: Gemini line F1 0.970 vs 0.914 deskewed baseline (+5.6 pts, rule needs +10); flags exact 100% vs 77%; false alarms 0/8 vs 4/8. Full app verified end to end on Docker. See docs/GATE1_RESULTS.md. |
 | 2026-10-31 | Gate 1 | not passed (strict rule) | Gemini line F1 0.947 vs 0.935 for a deskewed OCR+regex baseline on the same 18 hard cases (+1.2 pts, rule needs +10). AI edge is in flags exact (100% vs 83%) and false alarms (0/5 vs 2/5), small sample. See docs/GATE1_RESULTS.md. |
 | 2026-10-31 | Gate 2 | waived | Owner chose to build as a portfolio project; demand not validated and must not be claimed. |
 | 2026-10-30 | Gate 1 | pending | Baseline scores 1.00 on easy set but 0.54 line recall on hard set (32 cases). Gemini perfect on 8 easy cases, not yet measured on hard set (free quota 20/day). See docs/GATE1_RESULTS.md. |

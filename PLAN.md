@@ -1,6 +1,6 @@
 # PLAN.md
 
-Status as of 2026-10-31: research done; Gate 0 partial; Gate 1 not passed under the strict rule (Gemini F1 0.947 vs 0.935 for a deskewed baseline; AI edge is in flag accuracy and false alarms); Gate 2 waived; continuing as a portfolio project. Skeleton app (FastAPI, Celery, MongoDB, MinIO, Next.js) exists but is not validated end to end, and the owner chose to build it ahead of the gates. See `docs/GATE1_RESULTS.md`.
+Status as of 2026-11-01: research done; Gate 0 partial; Gate 1: line-F1 margin +5.6 pts (rule needs +10) but flag accuracy 100% vs 77% and 0/8 vs 4/8 false alarms; full app verified end to end on Docker; Gate 2 waived; continuing as a portfolio project. Skeleton app (FastAPI, Celery, MongoDB, MinIO, Next.js) exists but is not validated end to end, and the owner chose to build it ahead of the gates. See `docs/GATE1_RESULTS.md`.
 
 ## Phases
 1. **Research** — done. See `PRODUCT_RESEARCH.md`. 5 ideas assessed: 2 rejected, 2 on hold, 1 conditional candidate (Bill↔EOB Reconciler).
@@ -11,13 +11,13 @@ Status as of 2026-10-31: research done; Gate 0 partial; Gate 1 not passed under 
 6. **Publish** — repo `CodeAvk/eob-reconciler` (private) exists. Each push follows the checklist in `CLAUDE.md` plus tests and a security scan.
 
 ## Next actions
-- [ ] Run Gemini on the remaining 14 hard cases (14 requests, next quota window).
+- [ ] Run Gemini on the 2 unscored hard cases (case_027, case_031) when quota resets.
 - [ ] Optionally fix the baseline's long-date handling and re-measure the AI margin.
 - [x] Synthetic generator, baseline and evaluation harness (done 2026-10-30).
 - [x] Interview script drafted (`docs/INTERVIEW_SCRIPT.md`), kept as an optional path only.
-- [ ] End-to-end run of the full app with Docker, then fix what breaks.
+- [x] End-to-end run of the full app with Docker (2026-11-01): fixed Redis port clash, CORS config and evidence citations.
 - [ ] Privacy handling (redaction before any API call) and tests.
-- [ ] README with an honest scope statement, run guide and the Gate 1 numbers.
+- [x] README with an honest scope statement, run guide and the Gate 1 numbers (2026-11-01).
 
 ## Decisions (2026-10-29)
 - AI backend: free-tier APIs (Gemini first); hard-coded logic where no free API fits. No local models.
