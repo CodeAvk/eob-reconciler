@@ -60,3 +60,27 @@ def test_payload_supports_multiple_images():
     p = gc.build_payload("hi", images=[(b"a", "image/png"), (b"b", "image/jpeg")])
     parts = p["contents"][0]["parts"]
     assert len(parts) == 3 and parts[2]["inline_data"]["mime_type"] == "image/jpeg"
+
+
+def test_retries_count_against_daily_cap(tmp_path, monkeypatch):
+    import io
+    import urllib.error
+    monkeypatch.setattr(gc, "USAGE_FILE", tmp_path / "u.json")
+    monkeypatch.setattr(gc, "load_api_key", lambda *a, **k: "k")
+    monkeypatch.setattr(gc.time, "sleep", lambda s: None)
+    attempts = []
+
+    class Resp:
+        def __enter__(self): return self
+        def __exit__(self, *a): pass
+        def read(self):
+            return json.dumps({"candidates": [{"content": {"parts": [{"text": "ok"}]}}]}).encode()
+
+    def opener(*a, **k):
+        attempts.append(1)
+        if len(attempts) < 3:
+            raise urllib.error.HTTPError("u", 503, "busy", {}, io.BytesIO(b"{}"))
+        return Resp()
+
+    assert gc.generate("x", opener=opener, retries=2, daily_cap=10) == "ok"
+    assert json.loads((tmp_path / "u.json").read_text())["requests"] == 3

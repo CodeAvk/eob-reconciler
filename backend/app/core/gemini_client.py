@@ -90,12 +90,13 @@ def generate(prompt, image_bytes=None, mime_type="image/png", schema=None,
              images=None):
     """Call Gemini once (with retry on 429/5xx). Returns parsed JSON if a schema
     is given, otherwise the response text."""
-    _bump_usage(daily_cap if daily_cap is not None else DEFAULT_DAILY_CAP)
+    cap = daily_cap if daily_cap is not None else DEFAULT_DAILY_CAP
     body = json.dumps(build_payload(prompt, image_bytes, mime_type, schema, images)).encode()
     req = urllib.request.Request(
         ENDPOINT.format(model=model), data=body, method="POST",
         headers={"Content-Type": "application/json", "x-goog-api-key": load_api_key()})
     for attempt in range(retries + 1):
+        _bump_usage(cap)  # every HTTP attempt counts against Google's daily limit, retries included
         try:
             with opener(req, timeout=120) as resp:
                 data = json.loads(resp.read())
