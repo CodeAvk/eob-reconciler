@@ -32,3 +32,12 @@ def test_extract_case_uses_one_request_with_two_images():
     bill, eob = extract_case(b"b", "image/png", b"e", "image/jpeg", fake)
     assert len(calls) == 1 and len(calls[0]["images"]) == 2
     assert bill.stated_total == D("5.00") and eob.patient_responsibility == D("1.00")
+
+
+def test_evidence_keeps_real_row_text_and_labels_placeholders():
+    from app.extraction import _evidence
+    real = {"date": "d", "code": "SYN-1", "amount": "5.00", "source": "d SYN-1 Visit $5.00"}
+    assert _evidence(real, D("5.00")) == "d SYN-1 Visit $5.00"
+    fake = {"date": "2026-05-17", "code": "SYN-9111", "amount": "470.20", "source": "bill"}
+    out = _evidence(fake, D("470.20"))
+    assert "reconstructed" in out and "SYN-9111" in out and out != "bill"

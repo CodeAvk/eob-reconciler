@@ -10,7 +10,10 @@ from app.core.checks import Bill, Eob, Line
 
 _LINE = {"type": "OBJECT", "properties": {
     "date": {"type": "STRING"}, "code": {"type": "STRING"},
-    "amount": {"type": "STRING"}, "source": {"type": "STRING"}},
+    "amount": {"type": "STRING"},
+    "source": {"type": "STRING", "description":
+               "The complete text of this table row exactly as printed, for example "
+               "'2026-05-17 SYN-9111 Office visit $470.20'. Never a label such as 'bill'."}},
     "required": ["date", "code", "amount", "source"]}
 
 BILL_SCHEMA = {"type": "OBJECT", "properties": {
@@ -38,12 +41,25 @@ def _money(value: str) -> Decimal:
         raise ExtractionError(f"Not a valid amount: {value!r}") from None
 
 
+def _evidence(line: dict, amount: Decimal) -> str:
+    """Printed row text from the model, or an explicitly labelled reconstruction.
+
+    The model's text is kept only if it contains this line's code or amount, so a
+    placeholder such as "bill" is never shown to users as a quote.
+    """
+    text = str(line.get("source", "")).strip()
+    code = line["code"].strip()
+    if code and code in text or f"{amount:,.2f}" in text or str(amount) in text:
+        return text
+    return f"{line['date']} {code} ${amount:,.2f} (reconstructed, not a quote)"
+
+
 def extract_bill(image: bytes, mime: str, generate=gemini_client.generate) -> Bill:
     data = generate("Extract the itemized provider bill. Include only charge lines (service date, "
                     "code, charge). Exclude payments, adjustments, discounts and balances. " + _RULES,
                     image_bytes=image, mime_type=mime, schema=BILL_SCHEMA)
-    lines = [Line(l["date"], l["code"].strip(), _money(l["amount"]), l["source"])
-             for l in data["lines"]]
+    lines = [Line(l["date"], l["code"].strip(), _money(l["amount"]),
+                  _evidence(l, _money(l["amount"]))) for l in data["lines"]]
     return Bill(lines, _money(data["stated_total"]), _money(data["patient_owes"]))
 
 
@@ -68,7 +84,7 @@ def extract_case(bill_image: bytes, bill_mime: str, eob_image: bytes, eob_mime: 
         "explanation of benefits: extract the patient responsibility amount. " + _RULES,
         images=[(bill_image, bill_mime), (eob_image, eob_mime)], schema=CASE_SCHEMA)
     b = data["bill"]
-    lines = [Line(l["date"], l["code"].strip(), _money(l["amount"]), l["source"])
-             for l in b["lines"]]
+    lines = [Line(l["date"], l["code"].strip(), _money(l["amount"]),
+                  _evidence(l, _money(l["amount"]))) for l in b["lines"]]
     bill = Bill(lines, _money(b["stated_total"]), _money(b["patient_owes"]))
     return bill, Eob([], _money(data["eob"]["patient_responsibility"]))
