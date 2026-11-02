@@ -88,7 +88,7 @@ def load_cases(data_dir: Path, limit=None):
     return cases[:limit] if limit else cases
 
 
-def make_extractor(name: str, throttle: float = 0.0):
+def make_extractor(name: str, throttle: float = 0.0, model: str = None):
     if name == "baseline":
         from app import baseline
         return baseline.extract
@@ -96,10 +96,14 @@ def make_extractor(name: str, throttle: float = 0.0):
         from app import baseline
         return baseline.extract_deskew
     if name == "gemini":
+        from functools import partial
+
         from app import extraction
+        from app.core import gemini_client
+        gen = partial(gemini_client.generate, model=model) if model else gemini_client.generate
 
         def run(bill_png, eob_png):
-            result = extraction.extract_case(bill_png, "image/png", eob_png, "image/png")
+            result = extraction.extract_case(bill_png, "image/png", eob_png, "image/png", gen)
             time.sleep(throttle)
             return result
         return run
@@ -136,11 +140,13 @@ def main():
     ap.add_argument("--extractor", choices=["baseline", "baseline_deskew", "gemini"], required=True)
     ap.add_argument("--limit", type=int)
     ap.add_argument("--throttle", type=float, default=2.0)
+    ap.add_argument("--model", help="Gemini model id; results are cached and reported under its own name")
     a = ap.parse_args()
-    results = evaluate(make_extractor(a.extractor, a.throttle), a.extractor,
+    name = f"{a.extractor}_{a.model}" if a.model else a.extractor
+    results = evaluate(make_extractor(a.extractor, a.throttle, a.model), name,
                        Path(a.data_dir), a.limit)
-    report = {"extractor": a.extractor, "summary": aggregate(results), "cases": results}
-    out = ROOT / "data" / "eval" / f"{a.extractor}_{Path(a.data_dir).name}_report.json"
+    report = {"extractor": name, "summary": aggregate(results), "cases": results}
+    out = ROOT / "data" / "eval" / f"{name}_{Path(a.data_dir).name}_report.json"
     out.write_text(json.dumps(report, indent=2))
     print(json.dumps(report["summary"], indent=2))
     for r in results:

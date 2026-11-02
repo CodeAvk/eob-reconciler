@@ -43,6 +43,13 @@ def load_api_key(env_path: Path = ROOT / ".env") -> str:
     raise RuntimeError("No Gemini API key found. Set GEMINI_API_KEY or fill .env")
 
 
+def usage_path(model: str) -> Path:
+    """Google counts the free quota per model, so each model gets its own counter file."""
+    if model == "gemini-2.5-flash":
+        return USAGE_FILE
+    return USAGE_FILE.with_name(f"usage_{model}.json")
+
+
 def _bump_usage(daily_cap: int, path: Path = None) -> int:
     path = path or USAGE_FILE
     today = date.today().isoformat()
@@ -96,7 +103,7 @@ def generate(prompt, image_bytes=None, mime_type="image/png", schema=None,
         ENDPOINT.format(model=model), data=body, method="POST",
         headers={"Content-Type": "application/json", "x-goog-api-key": load_api_key()})
     for attempt in range(retries + 1):
-        _bump_usage(cap)  # every HTTP attempt counts against Google's daily limit, retries included
+        _bump_usage(cap, usage_path(model))  # every HTTP attempt counts against Google's daily limit, retries included
         try:
             with opener(req, timeout=120) as resp:
                 data = json.loads(resp.read())

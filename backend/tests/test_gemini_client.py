@@ -84,3 +84,12 @@ def test_retries_count_against_daily_cap(tmp_path, monkeypatch):
 
     assert gc.generate("x", opener=opener, retries=2, daily_cap=10) == "ok"
     assert json.loads((tmp_path / "u.json").read_text())["requests"] == 3
+
+
+def test_each_model_has_its_own_usage_counter(tmp_path, monkeypatch):
+    monkeypatch.setattr(gc, "USAGE_FILE", tmp_path / "usage.json")
+    assert gc.usage_path("gemini-2.5-flash") == tmp_path / "usage.json"
+    lite = gc.usage_path("gemini-2.5-flash-lite")
+    assert lite == tmp_path / "usage_gemini-2.5-flash-lite.json"
+    gc._bump_usage(1, gc.usage_path("gemini-2.5-flash"))
+    gc._bump_usage(1, lite)  # a full counter for one model does not block another
