@@ -1,7 +1,7 @@
 # Runs on every push to main and every pull request. Three independent jobs:
 #   backend   - pytest (in-memory repo, storage and queue; Gemini calls are mocked) and pip-audit
 #   frontend  - clean install, production build, typecheck and npm audit
-#   secrets   - gitleaks over the full git history
+#   secrets   - gitleaks over the new commits in each push or pull request (not the full history)
 # No repository secrets are used: the tests need no Gemini key, MongoDB, Redis or MinIO.
 name: ci
 
@@ -58,6 +58,7 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        # Full clone so gitleaks can resolve the push or pull request commit range.
         with:
           fetch-depth: 0
       - uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
